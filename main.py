@@ -10,7 +10,7 @@ from keras.utils import np_utils
 dataset_folder = 'dataset'
 dataset = DatasetPCam(path_to_dataset=dataset_folder)
 
-batch_size = 1
+batch_size = 64
 nb_classes = 2
 epochs = 1
 
@@ -41,9 +41,9 @@ model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['ac
 print('Finished compiling')
 
 (trainX, trainY), (testX, testY), (valX, valY) = dataset.get_train(), dataset.get_test(), dataset.get_valid()
-X_train = trainX[:100].astype('float16')
-X_test = testX[:100].astype('float16')
-X_val = valX[:100].astype('float16')
+X_train = trainX[:100].astype('float32')
+X_test = testX[:100].astype('float32')
+X_val = valX[:100].astype('float32')
 
 X_train /= 255.
 X_test /= 255.
@@ -80,3 +80,5 @@ model.fit(X_train, Y_train,
 scores = model.evaluate(X_test, Y_test, batch_size=batch_size)
 print('Test loss : ', scores[0])
 print('Test accuracy : ', scores[1])
+
+# TODO: odpalic na gpu i ogarnac problem z pamiecia
