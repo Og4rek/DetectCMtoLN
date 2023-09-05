@@ -21,7 +21,7 @@ This implementation is based on the following reference code:
 import keras.backend as K
 from keras.applications.imagenet_utils import obtain_input_shape
 from keras.applications.imagenet_utils import preprocess_input as _preprocess_input
-from keras.utils.layer_utils import get_source_inputs
+from keras.utils import get_source_inputs
 from keras.layers import Activation
 from keras.layers import AveragePooling2D
 from keras.layers import BatchNormalization

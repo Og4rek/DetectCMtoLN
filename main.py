@@ -1,4 +1,7 @@
-from src.data.data_loader_h5 import DatasetPCam
+import tensorflow as tf
+
+print(tf.config.list_physical_devices('GPU'))
+
 from src.models.GDenseNet import GDenseNet
 from keras import backend
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
@@ -6,7 +9,6 @@ from keras.optimizers import Adam
 import tensorflow as tf
 from keras.preprocessing.image import ImageDataGenerator
 import numpy as np
-from keras.utils import np_utils
 
 dataset_folder = 'dataset/data_png'
 # dataset = DatasetPCam(path_to_dataset=dataset_folder)

@@ -1,7 +1,7 @@
 import keras.backend as K
 from GrouPy.groupy.gconv.tensorflow_gconv.splitgconv2d import gconv2d_util
 from keras.layers import InputSpec
-from keras.layers.convolutional import Conv2D, Conv2DTranspose
+from keras.layers import Conv2D, Conv2DTranspose
 from keras.utils import get_custom_objects
 from src.models.keras_gcnn.transform_filter import transform_filter_2d_nhwc
 
