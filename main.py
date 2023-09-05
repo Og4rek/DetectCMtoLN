@@ -4,18 +4,59 @@ from keras import backend
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
 from keras.optimizers import Adam
 import tensorflow as tf
+from keras.preprocessing.image import ImageDataGenerator
 import numpy as np
 from keras.utils import np_utils
 
-dataset_folder = 'dataset'
-dataset = DatasetPCam(path_to_dataset=dataset_folder)
+dataset_folder = 'dataset/data_png'
+# dataset = DatasetPCam(path_to_dataset=dataset_folder)
 
-batch_size = 32
+batch_size = 16
 nb_classes = 2
 epochs = 1
 
 img_rows, img_cols = 96, 96
 img_channels = 3
+image_size = (96, 96)
+
+# Tworzenie generatorów danych
+train_datagen = ImageDataGenerator(rescale=1.0 / 255)
+train_generator = train_datagen.flow_from_directory(
+    f'{dataset_folder}/train',
+    target_size=image_size,
+    batch_size=batch_size,
+    class_mode='binary'
+)
+train_size = train_generator.n
+
+val_datagen = ImageDataGenerator(rescale=1.0 / 255)
+val_generator = val_datagen.flow_from_directory(
+    f'{dataset_folder}/val',
+    target_size=image_size,
+    batch_size=batch_size,
+    class_mode='binary'
+)
+val_size = val_generator.n
+
+test_datagen = ImageDataGenerator(rescale=1.0 / 255)
+test_generator = test_datagen.flow_from_directory(
+    f'{dataset_folder}/test',
+    target_size=image_size,
+    batch_size=batch_size,
+    class_mode='binary'
+)
+test_size = test_generator.n
+
+
+def custom_generator(generator):
+    for batch_x, batch_y in generator:
+        one_hot_labels = tf.one_hot(batch_y, depth=nb_classes)
+        yield batch_x, one_hot_labels
+
+
+train_generator = custom_generator(train_generator)
+val_generator = custom_generator(val_generator)
+test_generator = custom_generator(test_generator)
 
 # Parameters for the DenseNet model builder
 img_dim = (img_channels, img_rows, img_cols) if backend.image_data_format() == 'channels_first' else (
@@ -40,37 +81,11 @@ optimizer = Adam(learning_rate=1e-3)  # Using Adam instead of SGD to speed up tr
 model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
 print('Finished compiling')
 
-(trainX, trainY), (testX, testY), (valX, valY) = dataset.get_train(), dataset.get_test(), dataset.get_valid()
-
-
-trainY = np_utils.to_categorical(trainY, nb_classes)
-testY = np_utils.to_categorical(testY, nb_classes)
-valY = np_utils.to_categorical(valY, nb_classes)
-
-
-def preprocess_data(image, label):
-    image = tf.cast(image, tf.float32) / 255.0
-    return image, label
-
-
-dataset_train = tf.data.Dataset.from_tensor_slices((trainX, trainY))
-dataset_train = dataset.shuffle(buffer_size=len(trainX))
-dataset_train = dataset.batch(batch_size)
-dataset_train = dataset.map(preprocess_data)
-
-dataset_val = tf.data.Dataset.from_tensor_slices((valX, valY))
-dataset_val = dataset.shuffle(buffer_size=len(valX))
-dataset_val = dataset.batch(batch_size)
-dataset_val = dataset.map(preprocess_data)
-
-dataset_test = tf.data.Dataset.from_tensor_slices((testX, testY))
-dataset_test = dataset.shuffle(buffer_size=len(testX))
-dataset_test = dataset.batch(batch_size)
-dataset_test = dataset.map(preprocess_data)
-
+batch_images = next(train_generator)
+one_image = batch_images[0][0]
 
 # Test equivariance by comparing outputs for rotated versions of same datapoint:
-res = model.predict(np.stack([trainX[23], np.rot90(trainX[23])]))
+res = model.predict(np.stack([one_image, np.rot90(one_image)]))
 is_equivariant = np.allclose(res[0], res[1])
 print('Equivariance check:', is_equivariant)
 assert is_equivariant
@@ -85,16 +100,21 @@ model_checkpoint = ModelCheckpoint(weights_file, monitor='val_acc', save_best_on
 
 callbacks = [lr_reducer, early_stopper, model_checkpoint]
 
-model.fit(dataset_train,
-          batch_size=batch_size,
-          steps_per_epoch=len(trainX) // batch_size,
-          epochs=epochs,
-          callbacks=callbacks,
-          validation_data=dataset_train,
-          verbose=1)
+history = model.fit_generator(
+    generator=train_generator,
+    steps_per_epoch=train_size // batch_size,
+    epochs=epochs,
+    callbacks=callbacks,
+    validation_data=val_generator,
+    verbose=1
+)
 
-scores = model.evaluate(dataset_test, batch_size=batch_size)
+scores = model.evaluate_generator(
+    generator=test_generator,
+    batch_size=batch_size,
+)
+
 print('Test loss : ', scores[0])
 print('Test accuracy : ', scores[1])
 
-# TODO: odpalic na gpu i ogarnac problem z pamiecia
+# TODO: odpalic na gpu
