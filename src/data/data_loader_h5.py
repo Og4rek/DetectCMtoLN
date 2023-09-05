@@ -58,13 +58,13 @@ class DatasetPCam:
         return self.get_train_x(), self.get_train_y()
 
     def get_test_x(self):
-        return self._train_x
+        return self._test_x
 
     def set_test_x(self, data):
         self._test_x = data
 
     def get_test_y(self):
-        return self._train_y
+        return self._test_y
 
     def set_test_y(self, data):
         self._test_y = data
@@ -73,13 +73,13 @@ class DatasetPCam:
         return self.get_test_x(), self.get_test_y()
 
     def get_valid_x(self):
-        return self._train_x
+        return self._valid_x
 
     def set_valid_x(self, data):
         self._valid_x = data
 
     def get_valid_y(self):
-        return self._train_y
+        return self._valid_y
 
     def set_valid_y(self, data):
         self._valid_y = data
