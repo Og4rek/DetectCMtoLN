@@ -11,9 +11,9 @@ from keras.preprocessing.image import ImageDataGenerator
 import numpy as np
 
 dataset_folder = 'dataset/data_png'
-# dataset = DatasetPCam(path_to_dataset=dataset_folder)
+dataset = DatasetPCam(path_to_dataset=dataset_folder)
 
-batch_size = 16
+batch_size = 4
 nb_classes = 2
 epochs = 1
 
@@ -22,33 +22,49 @@ img_channels = 3
 image_size = (96, 96)
 
 # Tworzenie generatorów danych
-train_datagen = ImageDataGenerator(rescale=1.0 / 255)
-train_generator = train_datagen.flow_from_directory(
-    f'{dataset_folder}/train',
-    target_size=image_size,
-    batch_size=batch_size,
-    class_mode='binary'
-)
-train_size = train_generator.n
+# train_datagen = ImageDataGenerator(rescale=1.0 / 255)
+# train_generator = train_datagen.flow_from_directory(
+#     f'{dataset_folder}/train',
+#     target_size=image_size,
+#     batch_size=batch_size,
+#     class_mode='binary'
+# )
+# train_size = train_generator.n
+#
+# val_datagen = ImageDataGenerator(rescale=1.0 / 255)
+# val_generator = val_datagen.flow_from_directory(
+#     f'{dataset_folder}/val',
+#     target_size=image_size,
+#     batch_size=batch_size,
+#     class_mode='binary'
+# )
+# val_size = val_generator.n
+#
+# test_datagen = ImageDataGenerator(rescale=1.0 / 255)
+# test_generator = test_datagen.flow_from_directory(
+#     f'{dataset_folder}/test',
+#     target_size=image_size,
+#     batch_size=batch_size,
+#     class_mode='binary'
+# )
+# test_size = test_generator.n
 
-val_datagen = ImageDataGenerator(rescale=1.0 / 255)
-val_generator = val_datagen.flow_from_directory(
-    f'{dataset_folder}/val',
-    target_size=image_size,
-    batch_size=batch_size,
-    class_mode='binary'
-)
-val_size = val_generator.n
+train_ds = tf.keras.utils.image_dataset_from_directory(
+  directory=f'{dataset_folder}/train',
+  image_size=image_size,
+  batch_size=batch_size)
 
-test_datagen = ImageDataGenerator(rescale=1.0 / 255)
-test_generator = test_datagen.flow_from_directory(
-    f'{dataset_folder}/test',
-    target_size=image_size,
-    batch_size=batch_size,
-    class_mode='binary'
-)
-test_size = test_generator.n
+valid_ds = tf.keras.utils.image_dataset_from_directory(
+  directory=f'{dataset_folder}/val',
+  image_size=image_size,
+  batch_size=batch_size)
 
+test_ds = tf.keras.utils.image_dataset_from_directory(
+  directory=f'{dataset_folder}/test',
+  image_size=image_size,
+  batch_size=batch_size)
+
+train_size = len(test_ds)
 
 def custom_generator(generator):
     for batch_x, batch_y in generator:
@@ -56,9 +72,9 @@ def custom_generator(generator):
         yield batch_x, one_hot_labels
 
 
-train_generator = custom_generator(train_generator)
-val_generator = custom_generator(val_generator)
-test_generator = custom_generator(test_generator)
+# train_generator = custom_generator(train_generator)
+# val_generator = custom_generator(val_generator)
+# test_generator = custom_generator(test_generator)
 
 # Parameters for the DenseNet model builder
 img_dim = (img_channels, img_rows, img_cols) if backend.image_data_format() == 'channels_first' else (
@@ -83,7 +99,7 @@ optimizer = Adam(learning_rate=1e-3)  # Using Adam instead of SGD to speed up tr
 model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
 print('Finished compiling')
 
-batch_images = next(train_generator)
+batch_images = train_ds.take(1)
 one_image = batch_images[0][0]
 
 # Test equivariance by comparing outputs for rotated versions of same datapoint:
@@ -102,21 +118,24 @@ model_checkpoint = ModelCheckpoint(weights_file, monitor='val_acc', save_best_on
 
 callbacks = [lr_reducer, early_stopper, model_checkpoint]
 
-history = model.fit_generator(
-    generator=train_generator,
-    steps_per_epoch=train_size // batch_size,
+history = model.fit(
+    train_ds,
+    steps_per_epoch=train_size,
     epochs=epochs,
     callbacks=callbacks,
-    validation_data=val_generator,
+    validation_data=valid_ds,
     verbose=1
 )
 
-scores = model.evaluate_generator(
-    generator=test_generator,
+scores = model.evaluate(
+    test_ds,
     batch_size=batch_size,
 )
 
 print('Test loss : ', scores[0])
 print('Test accuracy : ', scores[1])
 
-# TODO: odpalic na gpu
+
+model.load_weights(weights_file)
+model.save('my_model')
+
