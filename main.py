@@ -1,141 +1,107 @@
-import tensorflow as tf
+import torch
+from torchvision import datasets
+from torchvision import transforms
+import torch.nn as nn
+import torch.nn.functional as F
+from torch.utils.data import DataLoader
 
-print(tf.config.list_physical_devices('GPU'))
-
-from src.models.GDenseNet import GDenseNet
-from keras import backend
-from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
-from keras.optimizers import Adam
-import tensorflow as tf
-from keras.preprocessing.image import ImageDataGenerator
-import numpy as np
-
-dataset_folder = 'dataset/data_png'
-dataset = DatasetPCam(path_to_dataset=dataset_folder)
-
-batch_size = 4
-nb_classes = 2
-epochs = 1
-
-img_rows, img_cols = 96, 96
-img_channels = 3
-image_size = (96, 96)
-
-# Tworzenie generatorów danych
-# train_datagen = ImageDataGenerator(rescale=1.0 / 255)
-# train_generator = train_datagen.flow_from_directory(
-#     f'{dataset_folder}/train',
-#     target_size=image_size,
-#     batch_size=batch_size,
-#     class_mode='binary'
-# )
-# train_size = train_generator.n
-#
-# val_datagen = ImageDataGenerator(rescale=1.0 / 255)
-# val_generator = val_datagen.flow_from_directory(
-#     f'{dataset_folder}/val',
-#     target_size=image_size,
-#     batch_size=batch_size,
-#     class_mode='binary'
-# )
-# val_size = val_generator.n
-#
-# test_datagen = ImageDataGenerator(rescale=1.0 / 255)
-# test_generator = test_datagen.flow_from_directory(
-#     f'{dataset_folder}/test',
-#     target_size=image_size,
-#     batch_size=batch_size,
-#     class_mode='binary'
-# )
-# test_size = test_generator.n
-
-train_ds = tf.keras.utils.image_dataset_from_directory(
-  directory=f'{dataset_folder}/train',
-  image_size=image_size,
-  batch_size=batch_size)
-
-valid_ds = tf.keras.utils.image_dataset_from_directory(
-  directory=f'{dataset_folder}/val',
-  image_size=image_size,
-  batch_size=batch_size)
-
-test_ds = tf.keras.utils.image_dataset_from_directory(
-  directory=f'{dataset_folder}/test',
-  image_size=image_size,
-  batch_size=batch_size)
-
-train_size = len(test_ds)
-
-def custom_generator(generator):
-    for batch_x, batch_y in generator:
-        one_hot_labels = tf.one_hot(batch_y, depth=nb_classes)
-        yield batch_x, one_hot_labels
+device = 'cpu'
+if torch.cuda.is_available():
+  device = 'cuda'
 
 
-# train_generator = custom_generator(train_generator)
-# val_generator = custom_generator(val_generator)
-# test_generator = custom_generator(test_generator)
+class Model(nn.Module):
+    def __init__(self):
+        super(Model, self).__init__()
+        self.conv1 = nn.Conv2d(3, 32, 3)
+        self.conv2 = nn.Conv2d(32, 64, 3)
+        self.pool = nn.MaxPool2d(2, 2)
+        self.fc1 = nn.Linear(64 * 46 * 46, 128)
+        self.fc2 = nn.Linear(128, 2)
 
-# Parameters for the DenseNet model builder
-img_dim = (img_channels, img_rows, img_cols) if backend.image_data_format() == 'channels_first' else (
-    img_rows, img_cols, img_channels)
-depth = 40
-nb_dense_block = 3
-growth_rate = 3  # number of z2 maps equals growth_rate * group_size, so keep this small.
-nb_filter = 16
-dropout_rate = 0.0  # 0.0 for data augmentation
-conv_group = 'D4'  # C4 includes 90 degree rotations, D4 additionally includes reflections in x and y axis.
-use_gcnn = True
-
-# Create the model (without loading weights)
-model = GDenseNet(mc_dropout=False, padding='same', nb_dense_block=nb_dense_block, growth_rate=growth_rate,
-                  nb_filter=nb_filter, dropout_rate=dropout_rate, weights=None, input_shape=img_dim, depth=depth,
-                  use_gcnn=use_gcnn, conv_group=conv_group, classes=nb_classes)
-print('Model created')
-
-model.summary()
-
-optimizer = Adam(learning_rate=1e-3)  # Using Adam instead of SGD to speed up training
-model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
-print('Finished compiling')
-
-batch_images = train_ds.take(1)
-one_image = batch_images[0][0]
-
-# Test equivariance by comparing outputs for rotated versions of same datapoint:
-res = model.predict(np.stack([one_image, np.rot90(one_image)]))
-is_equivariant = np.allclose(res[0], res[1])
-print('Equivariance check:', is_equivariant)
-assert is_equivariant
-
-weights_file = 'DenseNet.h5'
-
-lr_reducer = ReduceLROnPlateau(monitor='val_loss', factor=np.sqrt(0.1),
-                               cooldown=0, patience=10, min_lr=0.5e-6)
-early_stopper = EarlyStopping(monitor='val_acc', min_delta=1e-4, patience=20)
-model_checkpoint = ModelCheckpoint(weights_file, monitor='val_acc', save_best_only=True,
-                                   save_weights_only=True, mode='auto')
-
-callbacks = [lr_reducer, early_stopper, model_checkpoint]
-
-history = model.fit(
-    train_ds,
-    steps_per_epoch=train_size,
-    epochs=epochs,
-    callbacks=callbacks,
-    validation_data=valid_ds,
-    verbose=1
-)
-
-scores = model.evaluate(
-    test_ds,
-    batch_size=batch_size,
-)
-
-print('Test loss : ', scores[0])
-print('Test accuracy : ', scores[1])
+    def forward(self, x):
+        x = F.relu(self.conv1(x))
+        x = self.pool(F.relu(self.conv2(x)))
+        x = x.view(-1, 64 * 46 * 46)
+        x = F.relu(self.fc1(x))
+        x = self.fc2(x)
+        return x
 
 
-model.load_weights(weights_file)
-model.save('my_model')
+def train_loop(dataloader, model, loss_fn, optimizer):
+    size = len(dataloader.dataset)
+    model.train()
+    for batch, (X, y) in enumerate(dataloader):
+        X = X.to(device)
+        y = y.to(device)
+        pred = model(X)
+        loss = loss_fn(pred, y)
 
+        loss.backward()
+        optimizer.step()
+        optimizer.zero_grad()
+
+        if batch % 100 == 0:
+            loss, current = loss.item(), (batch + 1) * len(X)
+            print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
+
+
+def test_loop(dataloader, model, loss_fn):
+    model.eval()
+    size = len(dataloader.dataset)
+    num_batches = len(dataloader)
+    test_loss, correct = 0, 0
+
+    with torch.no_grad():
+        for X, y in dataloader:
+            X = X.to(device)
+            y = y.to(device)
+            pred = model(X)
+            test_loss += loss_fn(pred, y).item()
+            correct += (pred.argmax(1) == y).type(torch.float).sum().item()
+
+    test_loss /= num_batches
+    correct /= size
+    print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
+
+
+transform = transforms.Compose([
+   transforms.ToTensor(),
+   transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                        std=[0.229, 0.224, 0.225])
+])
+
+training_data = datasets.PCAM(root='dataset', split='train', transform=transform)
+valid_data = datasets.PCAM(root='dataset', split='val', transform=transform)
+test_data = datasets.PCAM(root='dataset', split='test', transform=transform)
+
+train_dataloader = DataLoader(training_data, batch_size=64)
+test_dataloader = DataLoader(test_data, batch_size=64)
+
+model = Model()
+model.to(device)
+
+print(model)
+
+learning_rate = 1e-3
+batch_size = 64
+epochs = 5
+
+loss_fn = nn.CrossEntropyLoss()
+optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
+
+for t in range(epochs):
+    print(f"Epoch {t+1}\n-------------------------------")
+    train_loop(train_dataloader, model, loss_fn, optimizer)
+    test_loop(test_dataloader, model, loss_fn)
+print("Done!")
+
+
+# TODO: 1) Stworzyc callback
+# TODO: 2) Zrobic parametry takie jak lr takie jak w artykule
+# TODO: 3) Zapisac model
+# TODO: 4) Zapisac ładnie wykresy
+# TODO: 5) Refaktor kodu ladnie na klasy i funkcje podzielic program
+# TODO: 6) Stworzyc własny model sieci CNN
+# TODO: 7) Stworzyc model sieci GCNN na podstawie CNN
+# TODO: 8) Wytrenowac sieć
