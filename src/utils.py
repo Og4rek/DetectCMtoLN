@@ -7,7 +7,6 @@ from tqdm import tqdm
 
 
 def train_loop(dataloader, model, loss_fn, optimizer, device):
-    size = len(dataloader.dataset)
     train_loss, train_accuracy = 0, 0
     counter = 0
     model.train()
@@ -24,7 +23,6 @@ def train_loop(dataloader, model, loss_fn, optimizer, device):
 
         loss.backward()
         optimizer.step()
-        optimizer.zero_grad()
 
     epoch_loss = train_loss / counter
     epoch_acc = train_accuracy / len(dataloader.dataset)
