@@ -46,6 +46,39 @@ def train_loop(dataloader, model, loss_fn, optimizer):
             print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
 
 
+def valid_loop(dataloader, model, loss_fn, epoch, best_valid_loss):
+    model.eval()
+    size = len(dataloader.dataset)
+    num_batches = len(dataloader)
+    test_loss, correct = 0, 0
+
+    with torch.no_grad():
+        for X, y in dataloader:
+            X = X.to(device)
+            y = y.to(device)
+            pred = model(X)
+            test_loss += loss_fn(pred, y).item()
+            correct += (pred.argmax(1) == y).type(torch.float).sum().item()
+
+    test_loss /= num_batches
+    correct /= size
+    print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
+
+    if correct < best_valid_loss:
+        best_valid_loss = correct
+        print(f"\nBest validation loss: {best_valid_loss}")
+        print(f"\nSaving best model for epoch: {epoch + 1}\n")
+        torch.save({
+            'epoch': epoch + 1,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'loss': loss_fn,
+        }, 'outputs/best_model.pth')
+        return best_valid_loss
+
+    return correct
+
+
 def test_loop(dataloader, model, loss_fn):
     model.eval()
     size = len(dataloader.dataset)
@@ -88,18 +121,34 @@ batch_size = 64
 epochs = 5
 
 loss_fn = nn.CrossEntropyLoss()
-optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
+optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
+best_acc_valid = 0
+
+print("Training started!")
 for t in range(epochs):
     print(f"Epoch {t+1}\n-------------------------------")
     train_loop(train_dataloader, model, loss_fn, optimizer)
-    test_loop(test_dataloader, model, loss_fn)
-print("Done!")
+    best_acc_valid = valid_loop(test_dataloader, model, loss_fn, t, best_acc_valid)
+print("Training done!")
 
+print(f"\nSaving last model for epoch: {epochs}\n")
+torch.save({
+    'epoch': epochs,
+    'model_state_dict': model.state_dict(),
+    'optimizer_state_dict': optimizer.state_dict(),
+    'loss': loss_fn,
+}, 'outputs/last_model.pth')
 
-# TODO: 1) Stworzyc callback
-# TODO: 2) Zrobic parametry takie jak lr takie jak w artykule
-# TODO: 3) Zapisac model
+print("Testing: ")
+
+# load the best model checkpoint
+best_model_cp = torch.load('outputs/best_model.pth')
+best_model_epoch = best_model_cp['epoch']
+print(f"Best model was saved at {best_model_epoch} epochs\n")
+
+test_loop(test_dataloader, best_model_cp, loss_fn)
+
 # TODO: 4) Zapisac ładnie wykresy
 # TODO: 5) Refaktor kodu ladnie na klasy i funkcje podzielic program
 # TODO: 6) Stworzyc własny model sieci CNN
