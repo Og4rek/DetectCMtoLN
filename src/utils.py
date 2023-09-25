@@ -3,6 +3,7 @@ import datetime
 import pandas as pd
 import matplotlib.pyplot as plt
 import torch
+from tqdm import tqdm
 
 
 def train_loop(dataloader, model, loss_fn, optimizer, device):
@@ -10,7 +11,7 @@ def train_loop(dataloader, model, loss_fn, optimizer, device):
     train_loss, train_accuracy = 0, 0
     counter = 0
     model.train()
-    for batch, (X, y) in enumerate(dataloader):
+    for batch, (X, y) in tqdm(enumerate(dataloader), total=len(dataloader), desc="Training Progress: "):
         counter += 1
         X = X.to(device)
         y = y.to(device)
@@ -25,7 +26,7 @@ def train_loop(dataloader, model, loss_fn, optimizer, device):
         optimizer.step()
         optimizer.zero_grad()
 
-        if batch % 100 == 0:
+        if batch % 1000 == 0:
             loss, current = loss.item(), (batch + 1) * len(X)
             print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
 
@@ -41,7 +42,7 @@ def valid_loop(dataloader, model, loss_fn, epoch, best_valid_acc, folder_path, d
     valid_loss, valid_accuracy = 0, 0
 
     with torch.no_grad():
-        for X, y in dataloader:
+        for X, y in tqdm(dataloader, total=len(dataloader), desc="Validation Progress: "):
             X = X.to(device)
             y = y.to(device)
             pred = model(X)
@@ -73,7 +74,7 @@ def test_loop(dataloader, model, loss_fn, device):
     test_loss, correct = 0, 0
 
     with torch.no_grad():
-        for X, y in dataloader:
+        for X, y in tqdm(dataloader, total=len(dataloader), desc="Testing Progress: "):
             X = X.to(device)
             y = y.to(device)
             pred = model(X)
