@@ -16,7 +16,7 @@ class PCAMModel:
 
         # hyperparameters
         self.learning_rate = 1e-3
-        self.epochs = 2
+        self.epochs = 30
         self.loss_fn = nn.CrossEntropyLoss()
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate)
         self.lr_scheduler = lr_scheduler.ReduceLROnPlateau(self.optimizer, mode='min', factor=np.sqrt(0.1), cooldown=0,
@@ -53,7 +53,7 @@ class PCAMModel:
                                                                    self.optimizer)
 
                 print(f"Train errors: train_loss: {train_loss:>7f}, train_acc: {train_acc:>7f}, "
-                      f"valid_loss: {valid_loss:>7f}, valid_acc: {valid_loss:>7f}\n")
+                      f"valid_loss: {valid_loss:>7f}, valid_acc: {valid_acc:>7f}\n")
                 writer.writerow([epoch + 1, train_loss, train_acc, valid_loss, valid_acc])
 
                 self.lr_scheduler.step(valid_loss)

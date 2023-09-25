@@ -14,15 +14,15 @@ def train_loop(dataloader, model, loss_fn, optimizer, device):
         counter += 1
         X = X.to(device)
         y = y.to(device)
-        output = model(X)
-        loss = loss_fn(output, y)
+        pred = model(X)
+        loss = loss_fn(pred, y)
 
         train_loss += loss.item()
-        _, preds = torch.max(output.data, 1)
-        train_accuracy += (preds == y).sum().item()
+        train_accuracy += (pred.argmax(1) == y).type(torch.float).sum().item()
 
         loss.backward()
         optimizer.step()
+        optimizer.zero_grad()
 
     epoch_loss = train_loss / counter
     epoch_acc = train_accuracy / len(dataloader.dataset)

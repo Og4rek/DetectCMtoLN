@@ -1,6 +1,7 @@
 from src.dataset import Dataset
 from src.pcammodel import PCAMModel
 from att_gconvs.experiments.pcam.models.densenet import *
+from att_gconvs.experiments.utils import num_params
 
 
 def main():
