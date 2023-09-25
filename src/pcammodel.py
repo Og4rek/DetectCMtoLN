@@ -78,6 +78,8 @@ class PCAMModel:
             'loss': self.loss_fn,
         }, os.path.join(self.output_path, 'last_model.pth'))
 
+        save_plots(self.output_path, csv_file_path)
+
     def test(self):
         best_model = torch.load(os.path.join(self.output_path, 'best_model.pth'))
         self.model.load_state_dict(best_model['model_state_dict'])
