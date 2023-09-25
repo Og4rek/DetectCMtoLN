@@ -26,12 +26,9 @@ def train_loop(dataloader, model, loss_fn, optimizer, device):
         optimizer.step()
         optimizer.zero_grad()
 
-        if batch % 1000 == 0:
-            loss, current = loss.item(), (batch + 1) * len(X)
-            print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
-
     epoch_loss = train_loss / counter
     epoch_acc = train_accuracy / len(dataloader.dataset)
+
     return epoch_acc, epoch_loss
 
 
@@ -51,12 +48,11 @@ def valid_loop(dataloader, model, loss_fn, epoch, best_valid_acc, folder_path, d
 
     valid_loss /= num_batches
     valid_accuracy /= size
-    print(f"Valid Error: \n Accuracy: {(100 * valid_accuracy):>0.1f}%, Avg loss: {valid_loss:>8f} \n")
 
     if valid_accuracy > best_valid_acc:
         best_valid_acc = valid_accuracy
-        print(f"\nBest validation accuracy: {best_valid_acc}")
-        print(f"\nSaving best model for epoch: {epoch + 1}\n")
+        print(f"Highest validation accuracy find: {best_valid_acc}")
+        print(f"Saving best model for epoch: {epoch + 1}")
         torch.save({
             'epoch': epoch + 1,
             'model_state_dict': model.state_dict(),
@@ -83,7 +79,7 @@ def test_loop(dataloader, model, loss_fn, device):
 
     test_loss /= num_batches
     correct /= size
-    print(f"Test Error: \n Accuracy: {(100 * correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
+    print(f"Test: \n Accuracy: {(100 * correct):>0.2f}%\n Avg loss: {test_loss:>8f} \n")
 
 
 def get_folder_name(output_directory):

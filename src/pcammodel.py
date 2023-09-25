@@ -45,6 +45,8 @@ class PCAMModel:
                                                                    self.device,
                                                                    self.optimizer)
 
+                print(f"train_loss: {train_loss:>7f}, train_acc: {train_acc:>7f}, "
+                      f"valid_loss: {valid_loss:>7f}, valid_acc: {valid_loss:>7f},")
                 writer.writerow([epoch + 1, train_loss, train_acc, valid_loss, valid_acc])
 
         print("Training done!")
