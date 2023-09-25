@@ -37,7 +37,7 @@ class PCAMModel:
             for epoch in range(self.epochs):
                 print(f"Epoch {epoch + 1}\n-------------------------------")
 
-                train_acc, train_loss = train_loop(self.dataset.test_dataloader,
+                train_acc, train_loss = train_loop(self.dataset.train_dataloader,
                                                    self.model,
                                                    self.loss_fn,
                                                    self.optimizer,
