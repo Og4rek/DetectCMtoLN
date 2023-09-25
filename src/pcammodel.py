@@ -14,7 +14,7 @@ class PCAMModel:
 
         # hyperparameters
         self.learning_rate = 1e-3
-        self.epochs = 5
+        self.epochs = 2
         self.loss_fn = nn.CrossEntropyLoss()
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate)
 
@@ -30,7 +30,7 @@ class PCAMModel:
             for epoch in range(self.epochs):
                 print(f"Epoch {epoch + 1}\n-------------------------------")
 
-                train_acc, train_loss = train_loop(self.dataset.train_dataloader,
+                train_acc, train_loss = train_loop(self.dataset.test_dataloader,
                                                    self.model,
                                                    self.loss_fn,
                                                    self.optimizer,
@@ -45,13 +45,13 @@ class PCAMModel:
                                                                    self.device,
                                                                    self.optimizer)
 
-                print(f"train_loss: {train_loss:>7f}, train_acc: {train_acc:>7f}, "
-                      f"valid_loss: {valid_loss:>7f}, valid_acc: {valid_loss:>7f},")
+                print(f"Train errors: train_loss: {train_loss:>7f}, train_acc: {train_acc:>7f}, "
+                      f"valid_loss: {valid_loss:>7f}, valid_acc: {valid_loss:>7f}\n")
                 writer.writerow([epoch + 1, train_loss, train_acc, valid_loss, valid_acc])
 
         print("Training done!")
 
-        print(f"\nSaving last model for epoch: {self.epochs}\n")
+        print(f"Saving last model for epoch: {self.epochs}")
         torch.save({
             'epoch': self.epochs,
             'model_state_dict': self.model.state_dict(),

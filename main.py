@@ -14,10 +14,10 @@ def main():
 
     print(pcam_model.model)
 
-    print('Training: ')
+    print('\nTraining: ')
     pcam_model.train()
 
-    print("Testing: ")
+    print("\nTesting: ")
     pcam_model.test()
 
 

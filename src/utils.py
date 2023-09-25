@@ -79,7 +79,7 @@ def test_loop(dataloader, model, loss_fn, device):
 
     test_loss /= num_batches
     correct /= size
-    print(f"Test: \n Accuracy: {(100 * correct):>0.2f}%\n Avg loss: {test_loss:>8f} \n")
+    print(f"Test done: \n Accuracy: {(100 * correct):>0.2f}%\n Avg loss: {test_loss:>8f} \n")
 
 
 def get_folder_name(output_directory):
