@@ -34,39 +34,41 @@ class PCAMModel:
         with open(os.path.join(self.output_path, csv_file_path), mode='w', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(headers)
-            for epoch in range(self.epochs):
-                print(f"Epoch {epoch + 1}\n-------------------------------")
+        for epoch in range(self.epochs):
+            print(f"Epoch {epoch + 1}\n-------------------------------")
 
-                train_acc, train_loss = train_loop(self.dataset.train_dataloader,
-                                                   self.model,
-                                                   self.loss_fn,
-                                                   self.optimizer,
-                                                   self.device)
+            train_acc, train_loss = train_loop(self.dataset.train_dataloader,
+                                               self.model,
+                                               self.loss_fn,
+                                               self.optimizer,
+                                               self.device)
 
-                valid_acc, valid_loss, best_valid_acc = valid_loop(self.dataset.valid_dataloader,
-                                                                   self.model,
-                                                                   self.loss_fn,
-                                                                   epoch,
-                                                                   best_valid_acc,
-                                                                   self.output_path,
-                                                                   self.device,
-                                                                   self.optimizer)
+            valid_acc, valid_loss, best_valid_acc = valid_loop(self.dataset.valid_dataloader,
+                                                               self.model,
+                                                               self.loss_fn,
+                                                               epoch,
+                                                               best_valid_acc,
+                                                               self.output_path,
+                                                               self.device,
+                                                               self.optimizer)
 
-                print(f"Train errors: train_loss: {train_loss:>7f}, train_acc: {train_acc:>7f}, "
-                      f"valid_loss: {valid_loss:>7f}, valid_acc: {valid_acc:>7f}\n")
+            print(f"Train errors: train_loss: {train_loss:>7f}, train_acc: {train_acc:>7f}, "
+                  f"valid_loss: {valid_loss:>7f}, valid_acc: {valid_acc:>7f}\n")
+            with open(os.path.join(self.output_path, csv_file_path), mode='a', newline='') as file:
+                writer = csv.writer(file)
                 writer.writerow([epoch + 1, train_loss, train_acc, valid_loss, valid_acc])
 
-                self.lr_scheduler.step(valid_loss)
+            self.lr_scheduler.step(valid_loss)
 
-                if best_valid_acc_es is None or valid_acc > best_valid_acc_es + self.early_stopping["min_delta"]:
-                    best_valid_acc_es = valid_acc
-                    counter = 0
-                else:
-                    counter += 1
+            if best_valid_acc_es is None or valid_acc > best_valid_acc_es + self.early_stopping["min_delta"]:
+                best_valid_acc_es = valid_acc
+                counter = 0
+            else:
+                counter += 1
 
-                if counter >= self.early_stopping["patience"]:
-                    print("Early stopping due to lack of improvement in validation accuracy")
-                    break
+            if counter >= self.early_stopping["patience"]:
+                print("Early stopping due to lack of improvement in validation accuracy")
+                break
 
         print("Training done!")
 

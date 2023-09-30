@@ -58,6 +58,13 @@ def valid_loop(dataloader, model, loss_fn, epoch, best_valid_acc, folder_path, d
             'loss': loss_fn,
         }, os.path.join(folder_path, 'best_model.pth'))
 
+    torch.save({
+        'epoch': epoch + 1,
+        'model_state_dict': model.state_dict(),
+        'optimizer_state_dict': optimizer.state_dict(),
+        'loss': loss_fn,
+    }, os.path.join(folder_path, 'last_model.pth'))
+
     return valid_accuracy, valid_loss, best_valid_acc
 
 
