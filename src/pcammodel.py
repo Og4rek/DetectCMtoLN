@@ -6,7 +6,7 @@ from src.utils import *
 
 
 class PCAMModel:
-    def __init__(self, dataset, model, batch_size, output_directory):
+    def __init__(self, dataset, model, batch_size, output_directory, lr, opt, loss, epoch_start):
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
         self.dataset = dataset
@@ -15,10 +15,12 @@ class PCAMModel:
         self.output_path = get_folder_name(output_directory)
 
         # hyperparameters
-        self.learning_rate = 1e-3
+        self.learning_rate = lr
         self.epochs = 30
-        self.loss_fn = nn.CrossEntropyLoss()
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.learning_rate)
+        self.epochs_start = epoch_start
+        self.loss_fn = loss
+        self.optimizer = opt
+        self.optimizer_to()
         self.lr_scheduler = lr_scheduler.ReduceLROnPlateau(self.optimizer, mode='min', factor=np.sqrt(0.1), cooldown=0,
                                                            patience=10, min_lr=0.5e-6)
         self.early_stopping = {"monitor": 'val_accuracy', "min_delta": 1e-4, "patience": 20}
@@ -34,7 +36,7 @@ class PCAMModel:
         with open(os.path.join(self.output_path, csv_file_path), mode='w', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(headers)
-        for epoch in range(self.epochs):
+        for epoch in range(self.epochs_start, self.epochs):
             print(f"Epoch {epoch + 1}\n-------------------------------")
 
             train_acc, train_loss = train_loop(self.dataset.train_dataloader,
@@ -86,3 +88,18 @@ class PCAMModel:
         best_model = torch.load(os.path.join(self.output_path, 'best_model.pth'))
         self.model.load_state_dict(best_model['model_state_dict'])
         test_loop(self.dataset.test_dataloader, self.model, self.loss_fn, self.device)
+
+    def optimizer_to(self):
+        for param in self.optimizer.state.values():
+            # Not sure there are any global tensors in the state dict
+            if isinstance(param, torch.Tensor):
+                param.data = param.data.to(self.device)
+                if param._grad is not None:
+                    param._grad.data = param._grad.data.to(self.device)
+            elif isinstance(param, dict):
+                for subparam in param.values():
+                    if isinstance(subparam, torch.Tensor):
+                        subparam.data = subparam.data.to(self.device)
+                        if subparam._grad is not None:
+                            subparam._grad.data = subparam._grad.data.to(self.device)
+
