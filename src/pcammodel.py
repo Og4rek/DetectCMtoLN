@@ -12,7 +12,8 @@ class PCAMModel:
         self.dataset = dataset
         self.model = model.to(self.device)
         self.batch_size = batch_size
-        self.output_path = get_folder_name(output_directory)
+        if output_directory is not None:
+            self.output_path = get_folder_name(output_directory)
 
         # hyperparameters
         self.learning_rate = lr
@@ -20,9 +21,10 @@ class PCAMModel:
         self.epochs_start = epoch_start
         self.loss_fn = loss
         self.optimizer = opt
-        self.optimizer_to()
-        self.lr_scheduler = lr_scheduler.ReduceLROnPlateau(self.optimizer, mode='min', factor=np.sqrt(0.1), cooldown=0,
-                                                           patience=10, min_lr=0.5e-6)
+        if opt is not None:
+            self.optimizer_to()
+            self.lr_scheduler = lr_scheduler.ReduceLROnPlateau(self.optimizer, mode='min', factor=np.sqrt(0.1),
+                                                               cooldown=0, patience=10, min_lr=0.5e-6)
         self.early_stopping = {"monitor": 'val_accuracy', "min_delta": 1e-4, "patience": 20}
 
     def train(self):
@@ -85,8 +87,6 @@ class PCAMModel:
         save_plots(self.output_path, csv_file_path)
 
     def test(self):
-        best_model = torch.load(os.path.join(self.output_path, 'best_model.pth'))
-        self.model.load_state_dict(best_model['model_state_dict'])
         test_loop(self.dataset.test_dataloader, self.model, self.loss_fn, self.device)
 
     def optimizer_to(self):

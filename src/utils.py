@@ -4,6 +4,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import torch
 from tqdm import tqdm
+from sklearn.metrics import roc_auc_score
+import numpy as np
 
 
 def train_loop(dataloader, model, loss_fn, optimizer, device):
@@ -73,18 +75,25 @@ def test_loop(dataloader, model, loss_fn, device):
     size = len(dataloader.dataset)
     num_batches = len(dataloader)
     test_loss, correct = 0, 0
+    y_true, y_scores = [], []
 
     with torch.no_grad():
-        for X, y in tqdm(dataloader, total=len(dataloader), desc="Testing Progress: "):
+        for X, y in dataloader:
             X = X.to(device)
             y = y.to(device)
             pred = model(X)
             test_loss += loss_fn(pred, y).item()
             correct += (pred.argmax(1) == y).type(torch.float).sum().item()
+            y_true.extend(y.cpu().numpy())
+            y_scores.extend(pred[:, 1].cpu().numpy())  # Assuming binary classification
 
     test_loss /= num_batches
     correct /= size
-    print(f"Test done: \n Accuracy: {(100 * correct):>0.2f}%\n Avg loss: {test_loss:>8f} \n")
+    y_true = np.array(y_true)
+    y_scores = np.array(y_scores)
+
+    auc = roc_auc_score(y_true, y_scores)
+    print(f"Test done: \n Accuracy: {(100 * correct):>0.2f}%\n Avg loss: {test_loss:>8f}\n AUC: {auc:>0.2f}\n")
 
 
 def get_folder_name(output_directory):

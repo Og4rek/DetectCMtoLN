@@ -11,10 +11,10 @@ def main():
 
     data_pcam = Dataset(root=dataset_folder, batch_size=batch_size)
 
-    model_continue = '/home/piti/pythonProjects/Magisterka_pytorch/Wyniki_ostateczne/fA_P4MDenseNet/best_model.pth'
-
+    # model_continue = '/home/piti/pythonProjects/Magisterka_pytorch/Wyniki_ostateczne/fA_P4MDenseNet/best_model.pth'
+    model_continue = ''
     learning_rate = 1e-3
-    model = fA_P4MDenseNet(n_channels=9)
+    model = P4DenseNet(n_channels=9)
     loss_fn = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     epoch_start = 0
@@ -34,11 +34,13 @@ def main():
     print("Model parameters: ", end='')
     num_params(model)
 
-    # print('\nTraining: ')
-    # pcam_model.train()
-    #
-    # print("\nTesting: ")
-    # pcam_model.test()
+    print(pcam_model.device)
+
+    print('\nTraining: ')
+    pcam_model.train()
+
+    print("\nTesting: ")
+    pcam_model.test()
 
 
 if __name__ == '__main__':
