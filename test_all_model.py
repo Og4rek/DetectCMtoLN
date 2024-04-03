@@ -11,19 +11,19 @@ def main():
     data_pcam = Dataset(root=dataset_folder, batch_size=batch_size)
 
     best_models_paths = {
-        'DenseNet': '/home/piti/pythonProjects/Magisterka_pytorch/Wyniki_ostateczne/DenseNet/best_model.pth',
-        'P4DenseNet': '/home/piti/pythonProjects/Magisterka_pytorch/Wyniki_ostateczne/P4DenseNet/best_model.pth',
-        'P4MDenseNet': '/home/piti/pythonProjects/Magisterka_pytorch/Wyniki_ostateczne/P4MDenseNet/best_model.pth',
-        'fA_P4DenseNet': '/home/piti/pythonProjects/Magisterka_pytorch/Wyniki_ostateczne/fA_P4DenseNet/best_model.pth',
-        'fA_P4MDenseNet': '/home/piti/pythonProjects/Magisterka_pytorch/Wyniki_ostateczne/fA_P4MDenseNet/best_model.pth'
+        'DenseNet': '/home/piti/pythonProjects/Magisterka_pytorch/outputs/2024-01-17_11-58-36-model-DenseNet/last_model.pth',
+        # 'P4DenseNet': '/home/piti/pythonProjects/Magisterka_pytorch/Wyniki_ostateczne/P4DenseNet/best_model.pth',
+        # 'P4MDenseNet': '/home/piti/pythonProjects/Magisterka_pytorch/Wyniki_ostateczne/P4MDenseNet/best_model.pth',
+        # 'fA_P4DenseNet': '/home/piti/pythonProjects/Magisterka_pytorch/Wyniki_ostateczne/fA_P4DenseNet/best_model.pth',
+        # 'fA_P4MDenseNet': '/home/piti/pythonProjects/Magisterka_pytorch/Wyniki_ostateczne/fA_P4MDenseNet/best_model.pth'
     }
 
     models = {
         'DenseNet': DenseNet(n_channels=26),
-        'P4DenseNet': P4DenseNet(n_channels=13),
-        'P4MDenseNet': P4MDenseNet(n_channels=9),
-        'fA_P4DenseNet': fA_P4DenseNet(n_channels=13),
-        'fA_P4MDenseNet': fA_P4MDenseNet(n_channels=9)
+        # 'P4DenseNet': P4DenseNet(n_channels=13),
+        # 'P4MDenseNet': P4MDenseNet(n_channels=9),
+        # 'fA_P4DenseNet': fA_P4DenseNet(n_channels=13),
+        # 'fA_P4MDenseNet': fA_P4MDenseNet(n_channels=9)
     }
 
     loss_fn = nn.CrossEntropyLoss()

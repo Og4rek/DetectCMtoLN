@@ -6,18 +6,18 @@ from src.utils import *
 
 
 class PCAMModel:
-    def __init__(self, dataset, model, batch_size, output_directory, lr, opt, loss, epoch_start):
+    def __init__(self, dataset, model, batch_size, output_directory, lr, opt, loss, epoch_start, k):
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
         self.dataset = dataset
         self.model = model.to(self.device)
         self.batch_size = batch_size
         if output_directory is not None:
-            self.output_path = get_folder_name(output_directory)
+            self.output_path = get_folder_name(output_directory, k)
 
         # hyperparameters
         self.learning_rate = lr
-        self.epochs = 30
+        self.epochs = 50
         self.epochs_start = epoch_start
         self.loss_fn = loss
         self.optimizer = opt

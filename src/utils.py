@@ -7,7 +7,7 @@ from tqdm import tqdm
 from sklearn.metrics import roc_auc_score
 import numpy as np
 
-
+print()
 def train_loop(dataloader, model, loss_fn, optimizer, device):
     train_loss, train_accuracy = 0, 0
     counter = 0
@@ -96,7 +96,7 @@ def test_loop(dataloader, model, loss_fn, device):
     print(f"Test done: \n Accuracy: {(100 * correct):>0.2f}%\n Avg loss: {test_loss:>8f}\n AUC: {auc:>0.2f}\n")
 
 
-def get_folder_name(output_directory):
+def get_folder_name(output_directory, k):
     current_datetime = datetime.datetime.now()
 
     year = current_datetime.year
@@ -106,7 +106,7 @@ def get_folder_name(output_directory):
     minute = current_datetime.minute
     second = current_datetime.second
 
-    folder_name = f"{year}-{month:02d}-{day:02d}_{hour:02d}-{minute:02d}-{second:02d}"
+    folder_name = f"{year}-{month:02d}-{day:02d}_{hour:02d}-{minute:02d}-{second:02d}-model-{k}"
 
     folder_path = os.path.join(output_directory, folder_name)
 
