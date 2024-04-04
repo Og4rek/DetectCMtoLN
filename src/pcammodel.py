@@ -17,7 +17,7 @@ class PCAMModel:
 
         # hyperparameters
         self.learning_rate = lr
-        self.epochs = 50
+        self.epochs = 10
         self.epochs_start = epoch_start
         self.loss_fn = loss
         self.optimizer = opt

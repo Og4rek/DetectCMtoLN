@@ -14,12 +14,12 @@ class Dataset:
             transforms.RandomHorizontalFlip(p=0.5),  # Horizontal flip with probability 1.0 (always)
             transforms.RandomVerticalFlip(p=0.5),  # Vertical flip with probability 1.0 (always)
             transforms.RandomRotation(degrees=90),  # Rotation range of 90 degrees
-            transforms.RandomResizedCrop(size=(32, 32), scale=(0.8, 1.1), ratio=(0.9, 1.1)),
+            transforms.RandomResizedCrop(size=(96, 96), scale=(0.8, 1.1), ratio=(0.9, 1.1)),
             transforms.ColorJitter(brightness=0.03),
-            # transforms.Normalize(mean=[0.485, 0.456, 0.406],
-            #                      std=[0.229, 0.224, 0.225])
-            transforms.Normalize(mean=[0.5],
-                                 std=[0.5])
+            transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                 std=[0.229, 0.224, 0.225])
+            # transforms.Normalize(mean=[0.5],
+            #                      std=[0.5])
         ])
 
         self.test_data = None

@@ -27,7 +27,7 @@ def main():
     # model = torch.hub.load('pytorch/vision:v0.10.0', 'resnet101', pretrained=False)
     # num_classes = 2
     # model.fc = nn.Linear(model.fc.in_features, num_classes)
-    model = DenseNet(n_channels=26)
+    model = P4DenseNet(n_channels=13)
     loss_fn = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     epoch_start = 0
@@ -43,7 +43,7 @@ def main():
     # model(torch.rand([1, 3, 96, 96]))
     #
     pcam_model = PCAMModel(dataset=data_pcam, model=model, batch_size=batch_size, output_directory=output_folder,
-                           lr=learning_rate, opt=optimizer, loss=loss_fn, epoch_start=epoch_start, k='resnet101')
+                           lr=learning_rate, opt=optimizer, loss=loss_fn, epoch_start=epoch_start, k='P4DenseNet_aug')
     #
 
     print(pcam_model.model)
