@@ -1,107 +1,65 @@
-import torch
-from torchvision import datasets
-from torchvision import transforms
-import torch.nn as nn
-import torch.nn.functional as F
-from torch.utils.data import DataLoader
-
-device = 'cpu'
-if torch.cuda.is_available():
-  device = 'cuda'
+from src.dataset import Dataset
+from src.pcammodel import PCAMModel
+from att_gconvs.experiments.pcam.models.densenet import *
+from att_gconvs.experiments.utils import num_params
+from vit_pytorch import ViT
 
 
-class Model(nn.Module):
-    def __init__(self):
-        super(Model, self).__init__()
-        self.conv1 = nn.Conv2d(3, 32, 3)
-        self.conv2 = nn.Conv2d(32, 64, 3)
-        self.pool = nn.MaxPool2d(2, 2)
-        self.fc1 = nn.Linear(64 * 46 * 46, 128)
-        self.fc2 = nn.Linear(128, 2)
+def main():
+    dataset_folder = 'dataset'
+    output_folder = 'outputs'
+    batch_size = 64
 
-    def forward(self, x):
-        x = F.relu(self.conv1(x))
-        x = self.pool(F.relu(self.conv2(x)))
-        x = x.view(-1, 64 * 46 * 46)
-        x = F.relu(self.fc1(x))
-        x = self.fc2(x)
-        return x
+    data_pcam = Dataset(root=dataset_folder, batch_size=batch_size)
 
+    print()
 
-def train_loop(dataloader, model, loss_fn, optimizer):
-    size = len(dataloader.dataset)
-    model.train()
-    for batch, (X, y) in enumerate(dataloader):
-        X = X.to(device)
-        y = y.to(device)
-        pred = model(X)
-        loss = loss_fn(pred, y)
+    models = {
+        'DenseNet': DenseNet(n_channels=26),
+        'P4DenseNet': P4DenseNet(n_channels=13),
+        'P4MDenseNet': P4MDenseNet(n_channels=9),
+        'fA_P4DenseNet': fA_P4DenseNet(n_channels=13),
+        'fA_P4MDenseNet': fA_P4MDenseNet(n_channels=9)
+    }
 
-        loss.backward()
-        optimizer.step()
-        optimizer.zero_grad()
+    # for k, v in models.items():
+    learning_rate = 1e-3
+    # model = torch.hub.load('pytorch/vision:v0.10.0', 'resnet101', pretrained=False)
+    # num_classes = 2
+    # model.fc = nn.Linear(model.fc.in_features, num_classes)
+    model = P4DenseNet(n_channels=13)
+    loss_fn = nn.CrossEntropyLoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    epoch_start = 0
+    # epoch_start = 0
+    # model_continue = '/home/piti/pythonProjects/Magisterka_pytorch/outputs/2024-01-18_23-04-45-model-resnet101/last_model.pth'
+    model_continue = ''
+    if len(model_continue) > 0:
+        load_model = torch.load(model_continue)
+        model.load_state_dict(load_model['model_state_dict'])
+        optimizer.load_state_dict(load_model['optimizer_state_dict'])
+        epoch_start = load_model['epoch']
+    #
+    # model(torch.rand([1, 3, 96, 96]))
+    #
+    pcam_model = PCAMModel(dataset=data_pcam, model=model, batch_size=batch_size, output_directory=output_folder,
+                           lr=learning_rate, opt=optimizer, loss=loss_fn, epoch_start=epoch_start, k='P4DenseNet_aug')
+    #
 
-        if batch % 100 == 0:
-            loss, current = loss.item(), (batch + 1) * len(X)
-            print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
+    print(pcam_model.model)
+    print("Model parameters: ", end='')
+    num_params(model)
 
+    print(pcam_model.device)
 
-def test_loop(dataloader, model, loss_fn):
-    model.eval()
-    size = len(dataloader.dataset)
-    num_batches = len(dataloader)
-    test_loss, correct = 0, 0
+    print('\nTraining: ')
+    pcam_model.train()
 
-    with torch.no_grad():
-        for X, y in dataloader:
-            X = X.to(device)
-            y = y.to(device)
-            pred = model(X)
-            test_loss += loss_fn(pred, y).item()
-            correct += (pred.argmax(1) == y).type(torch.float).sum().item()
+    print("\nTesting: ")
+    pcam_model.test()
 
-    test_loss /= num_batches
-    correct /= size
-    print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
-
-
-transform = transforms.Compose([
-   transforms.ToTensor(),
-   transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                        std=[0.229, 0.224, 0.225])
-])
-
-training_data = datasets.PCAM(root='dataset', split='train', transform=transform)
-valid_data = datasets.PCAM(root='dataset', split='val', transform=transform)
-test_data = datasets.PCAM(root='dataset', split='test', transform=transform)
-
-train_dataloader = DataLoader(training_data, batch_size=64)
-test_dataloader = DataLoader(test_data, batch_size=64)
-
-model = Model()
-model.to(device)
-
-print(model)
-
-learning_rate = 1e-3
-batch_size = 64
-epochs = 5
-
-loss_fn = nn.CrossEntropyLoss()
-optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
-
-for t in range(epochs):
-    print(f"Epoch {t+1}\n-------------------------------")
-    train_loop(train_dataloader, model, loss_fn, optimizer)
-    test_loop(test_dataloader, model, loss_fn)
-print("Done!")
+    # model_continue = ''
 
 
-# TODO: 1) Stworzyc callback
-# TODO: 2) Zrobic parametry takie jak lr takie jak w artykule
-# TODO: 3) Zapisac model
-# TODO: 4) Zapisac ładnie wykresy
-# TODO: 5) Refaktor kodu ladnie na klasy i funkcje podzielic program
-# TODO: 6) Stworzyc własny model sieci CNN
-# TODO: 7) Stworzyc model sieci GCNN na podstawie CNN
-# TODO: 8) Wytrenowac sieć
+if __name__ == '__main__':
+    main()
