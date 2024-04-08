@@ -36,19 +36,18 @@ def main():
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     epoch_start = 0
     # epoch_start = 0
-    # model_continue = ''
-    # model_continue = '/home/piti/pythonProjects/Magisterka_pytorch/outputs/modelfa3/last_model.pth'
-    # if len(model_continue) > 0:
-    #     load_model = torch.load(model_continue)
-    #     model.load_state_dict(load_model['model_state_dict'])
-    #     optimizer.load_state_dict(load_model['optimizer_state_dict'])
-    #     epoch_start = load_model['epoch']
+    # model_continue = '/home/piti/pythonProjects/Magisterka_pytorch/outputs/2024-01-18_23-04-45-model-resnet101/last_model.pth'
+    model_continue = ''
+    if len(model_continue) > 0:
+        load_model = torch.load(model_continue)
+        model.load_state_dict(load_model['model_state_dict'])
+        optimizer.load_state_dict(load_model['optimizer_state_dict'])
+        epoch_start = load_model['epoch']
     #
     # model(torch.rand([1, 3, 96, 96]))
     #
     pcam_model = PCAMModel(dataset=data_pcam, model=model, batch_size=batch_size, output_directory=output_folder,
-                           lr=learning_rate, opt=optimizer, loss=loss_fn, epoch_start=epoch_start,
-                           k='testy')
+                           lr=learning_rate, opt=optimizer, loss=loss_fn, epoch_start=epoch_start, k='resnet101_aug')
     #
 
     print(pcam_model.model)
