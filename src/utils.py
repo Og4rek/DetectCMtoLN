@@ -8,7 +8,7 @@ from sklearn.metrics import roc_auc_score
 import numpy as np
 
 print()
-def train_loop(dataloader, model, loss_fn, optimizer, device):
+def train_loop(dataloader, model, loss_fn, optimizer, device, scheduler):
     train_loss, train_accuracy = 0, 0
     counter = 0
     model.train()
@@ -19,12 +19,15 @@ def train_loop(dataloader, model, loss_fn, optimizer, device):
         pred = model(X)
         loss = loss_fn(pred, y)
 
+
         train_loss += loss.item()
         train_accuracy += (pred.argmax(1) == y).type(torch.float).sum().item()
 
         loss.backward()
         optimizer.step()
+        scheduler.step()
         optimizer.zero_grad()
+        print(optimizer.param_groups[0]['lr'])
 
     epoch_loss = train_loss / counter
     epoch_acc = train_accuracy / len(dataloader.dataset)
@@ -78,7 +81,7 @@ def test_loop(dataloader, model, loss_fn, device):
     y_true, y_scores = [], []
 
     with torch.no_grad():
-        for X, y in dataloader:
+        for X, y in tqdm(dataloader, total=len(dataloader), desc="Testing Progress: "):
             X = X.to(device)
             y = y.to(device)
             pred = model(X)
