@@ -19,7 +19,6 @@ def train_loop(dataloader, model, loss_fn, optimizer, device, scheduler):
         pred = model(X)
         loss = loss_fn(pred, y)
 
-
         train_loss += loss.item()
         train_accuracy += (pred.argmax(1) == y).type(torch.float).sum().item()
 
@@ -27,7 +26,7 @@ def train_loop(dataloader, model, loss_fn, optimizer, device, scheduler):
         optimizer.step()
         scheduler.step()
         optimizer.zero_grad()
-        print(optimizer.param_groups[0]['lr'])
+        # print(optimizer.param_groups[0]['lr'])
 
     epoch_loss = train_loss / counter
     epoch_acc = train_accuracy / len(dataloader.dataset)

@@ -39,7 +39,7 @@ class Dataset:
         self.test_data = datasets.PCAM(self.root, split='test', transform=self.transform)
 
     def create_dataloaders(self):
-        self.train_dataloader = data.DataLoader(self.valid_data, batch_size=self.batch_size)
+        self.train_dataloader = data.DataLoader(self.training_data, batch_size=self.batch_size)
         self.valid_dataloader = data.DataLoader(self.valid_data, batch_size=self.batch_size)
         self.test_dataloader = data.DataLoader(self.test_data, batch_size=self.batch_size)
 

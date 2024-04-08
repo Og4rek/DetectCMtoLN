@@ -49,29 +49,29 @@ class PCAMModel:
                                                self.optimizer,
                                                self.device,
                                                self.ln_scheduler)
-            print(self.learning_rate)
-            # valid_acc, valid_loss, best_valid_acc = valid_loop(self.dataset.valid_dataloader,
-            #                                                    self.model,
-            #                                                    self.loss_fn,
-            #                                                    epoch,
-            #                                                    best_valid_acc,
-            #                                                    self.output_path,
-            #                                                    self.device,
-            #                                                    self.optimizer)
-            #
-            # print(f"Train errors: train_loss: {train_loss:>7f}, train_acc: {train_acc:>7f}, "
-            #       f"valid_loss: {valid_loss:>7f}, valid_acc: {valid_acc:>7f}, lr: {self.learning_rate}\n")
-            # with open(os.path.join(self.output_path, csv_file_path), mode='a', newline='') as file:
-            #     writer = csv.writer(file)
-            #     writer.writerow([epoch + 1, train_loss, train_acc, valid_loss, valid_acc, self.learning_rate])
-            #
-            # # self.lr_scheduler.step(valid_loss)
-            #
-            # if best_valid_acc_es is None or valid_acc > best_valid_acc_es + self.early_stopping["min_delta"]:
-            #     best_valid_acc_es = valid_acc
-            #     counter = 0
-            # else:
-            #     counter += 1
+            # print(self.learning_rate)
+            valid_acc, valid_loss, best_valid_acc = valid_loop(self.dataset.valid_dataloader,
+                                                               self.model,
+                                                               self.loss_fn,
+                                                               epoch,
+                                                               best_valid_acc,
+                                                               self.output_path,
+                                                               self.device,
+                                                               self.optimizer)
+
+            print(f"Train errors: train_loss: {train_loss:>7f}, train_acc: {train_acc:>7f}, "
+                  f"valid_loss: {valid_loss:>7f}, valid_acc: {valid_acc:>7f}, lr: {self.optimizer.param_groups[0]['lr']}\n")
+            with open(os.path.join(self.output_path, csv_file_path), mode='a', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow([epoch + 1, train_loss, train_acc, valid_loss, valid_acc, self.optimizer.param_groups[0]['lr']])
+
+            # self.lr_scheduler.step(valid_loss)
+
+            if best_valid_acc_es is None or valid_acc > best_valid_acc_es + self.early_stopping["min_delta"]:
+                best_valid_acc_es = valid_acc
+                counter = 0
+            else:
+                counter += 1
 
             if counter >= self.early_stopping["patience"]:
                 print("Early stopping due to lack of improvement in validation accuracy")
