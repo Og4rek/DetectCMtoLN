@@ -36,7 +36,7 @@ def main():
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     epoch_start = 0
     # epoch_start = 0
-    model_continue = '/kaggle/input/pcamresnet101/pytorch/v1/1/last_model.pth'
+    model_continue = '/kaggle/input/pcamresnet101/pytorch/pcamresnet101/1/last_model.pth'
     if len(model_continue) > 0:
         load_model = torch.load(model_continue)
         model.load_state_dict(load_model['model_state_dict'])
