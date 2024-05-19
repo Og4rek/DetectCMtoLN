@@ -1,10 +1,9 @@
-from torch.optim import lr_scheduler
 import csv
 from src.utils import *
 
 
 class PCAMResNetModel:
-    def __init__(self, dataset, model, batch_size, output_directory, max_lr, epochs, opt, loss, epoch_start, k):
+    def __init__(self, dataset, model, batch_size, output_directory, max_lr, epochs, opt, loss, epoch_start, scheduler, k):
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
         self.dataset = dataset
@@ -19,8 +18,7 @@ class PCAMResNetModel:
         self.epochs_start = epoch_start
         self.loss_fn = loss
         self.optimizer = opt
-        self.ln_scheduler = lr_scheduler.OneCycleLR(self.optimizer, max_lr=self.max_learning_rate,
-                                                    total_steps=len(dataset.train_dataloader)*self.epochs)
+        self.ln_scheduler = scheduler
         self.early_stopping = {"monitor": 'val_accuracy', "min_delta": 1e-4, "patience": 20}
 
     def train(self):
@@ -43,7 +41,7 @@ class PCAMResNetModel:
                                                self.optimizer,
                                                self.device,
                                                self.ln_scheduler)
-            # print(self.learning_rate)
+
             valid_acc, valid_loss, best_valid_acc = valid_loop(self.dataset.valid_dataloader,
                                                                self.model,
                                                                self.loss_fn,
@@ -51,7 +49,8 @@ class PCAMResNetModel:
                                                                best_valid_acc,
                                                                self.output_path,
                                                                self.device,
-                                                               self.optimizer)
+                                                               self.optimizer,
+                                                               self.ln_scheduler)
 
             print(f"Train errors: train_loss: {train_loss:>7f}, train_acc: {train_acc:>7f}, "
                   f"valid_loss: {valid_loss:>7f}, valid_acc: {valid_acc:>7f}, lr: {self.optimizer.param_groups[0]['lr']}\n")
@@ -70,14 +69,6 @@ class PCAMResNetModel:
                 break
 
         print("Training done!")
-
-        print(f"Saving last model for epoch: {self.epochs}")
-        torch.save({
-            'epoch': self.epochs,
-            'model_state_dict': self.model.state_dict(),
-            'optimizer_state_dict': self.optimizer.state_dict(),
-            'loss': self.loss_fn,
-        }, os.path.join(self.output_path, 'last_model.pth'))
 
         save_plots(self.output_path, csv_file_path)
 

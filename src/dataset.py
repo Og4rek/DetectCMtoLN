@@ -62,7 +62,7 @@ class Dataset:
         self.create_dataloaders()
 
     def create_datasets(self):
-        self.training_data = datasets.PCAM(self.root, split='train', transform=self.transform)
+        self.training_data = datasets.PCAM(self.root, split='train', transform=self.transform_valid)
         self.valid_data = datasets.PCAM(self.root, split='val', transform=self.transform_valid)
         self.test_data = datasets.PCAM(self.root, split='test', transform=self.transform_valid)
 

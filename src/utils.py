@@ -33,7 +33,7 @@ def train_loop(dataloader, model, loss_fn, optimizer, device, scheduler):
     return epoch_acc, epoch_loss
 
 
-def valid_loop(dataloader, model, loss_fn, epoch, best_valid_acc, folder_path, device, optimizer):
+def valid_loop(dataloader, model, loss_fn, epoch, best_valid_acc, folder_path, device, optimizer, scheduler):
     model.eval()
     size = len(dataloader.dataset)
     num_batches = len(dataloader)
@@ -58,13 +58,17 @@ def valid_loop(dataloader, model, loss_fn, epoch, best_valid_acc, folder_path, d
             'epoch': epoch + 1,
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
+            'scheduler_state_dict': scheduler.state_dict(),
             'loss': loss_fn,
         }, os.path.join(folder_path, 'best_model.pth'))
+
+    print(f"Saving last model for epoch: {epoch + 1}")
 
     torch.save({
         'epoch': epoch + 1,
         'model_state_dict': model.state_dict(),
         'optimizer_state_dict': optimizer.state_dict(),
+        'scheduler_state_dict': scheduler.state_dict(),
         'loss': loss_fn,
     }, os.path.join(folder_path, 'last_model.pth'))
 
