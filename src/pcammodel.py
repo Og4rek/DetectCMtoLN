@@ -1,12 +1,10 @@
-import torch.nn as nn
-import numpy as np
 from torch.optim import lr_scheduler
 import csv
 from src.utils import *
 
 
-class PCAMModel:
-    def __init__(self, dataset, model, batch_size, output_directory, lr, opt, loss, epoch_start, k):
+class PCAMResNetModel:
+    def __init__(self, dataset, model, batch_size, output_directory, max_lr, epochs, opt, loss, epoch_start, k):
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
         self.dataset = dataset
@@ -16,17 +14,13 @@ class PCAMModel:
             self.output_path = get_folder_name(output_directory, k)
 
         # hyperparameters
-        self.learning_rate = 1e-2
-        self.epochs = 30
+        self.max_learning_rate = max_lr
+        self.epochs = epochs
         self.epochs_start = epoch_start
         self.loss_fn = loss
         self.optimizer = opt
-        if opt is not None:
-            self.optimizer_to()
-            self.ln_scheduler = lr_scheduler.OneCycleLR(self.optimizer, max_lr=1e-1,
-                                                        total_steps=len(dataset.train_dataloader)*self.epochs)
-            # self.lr_scheduler = lr_scheduler.ReduceLROnPlateau(self.optimizer, mode='min', factor=np.sqrt(0.1),
-            #                                                    cooldown=0, patience=10, min_lr=0.5e-6)
+        self.ln_scheduler = lr_scheduler.OneCycleLR(self.optimizer, max_lr=self.max_learning_rate,
+                                                    total_steps=len(dataset.train_dataloader)*self.epochs)
         self.early_stopping = {"monitor": 'val_accuracy', "min_delta": 1e-4, "patience": 20}
 
     def train(self):
@@ -65,8 +59,6 @@ class PCAMModel:
                 writer = csv.writer(file)
                 writer.writerow([epoch + 1, train_loss, train_acc, valid_loss, valid_acc, self.optimizer.param_groups[0]['lr']])
 
-            # self.lr_scheduler.step(valid_loss)
-
             if best_valid_acc_es is None or valid_acc > best_valid_acc_es + self.early_stopping["min_delta"]:
                 best_valid_acc_es = valid_acc
                 counter = 0
@@ -91,18 +83,3 @@ class PCAMModel:
 
     def test(self):
         test_loop(self.dataset.test_dataloader, self.model, self.loss_fn, self.device)
-
-    def optimizer_to(self):
-        for param in self.optimizer.state.values():
-            # Not sure there are any global tensors in the state dict
-            if isinstance(param, torch.Tensor):
-                param.data = param.data.to(self.device)
-                if param._grad is not None:
-                    param._grad.data = param._grad.data.to(self.device)
-            elif isinstance(param, dict):
-                for subparam in param.values():
-                    if isinstance(subparam, torch.Tensor):
-                        subparam.data = subparam.data.to(self.device)
-                        if subparam._grad is not None:
-                            subparam._grad.data = subparam._grad.data.to(self.device)
-

@@ -7,7 +7,7 @@ from tqdm import tqdm
 from sklearn.metrics import roc_auc_score
 import numpy as np
 
-print()
+
 def train_loop(dataloader, model, loss_fn, optimizer, device, scheduler):
     train_loss, train_accuracy = 0, 0
     counter = 0
@@ -26,7 +26,6 @@ def train_loop(dataloader, model, loss_fn, optimizer, device, scheduler):
         optimizer.step()
         scheduler.step()
         optimizer.zero_grad()
-        # print(optimizer.param_groups[0]['lr'])
 
     epoch_loss = train_loss / counter
     epoch_acc = train_accuracy / len(dataloader.dataset)
@@ -118,7 +117,7 @@ def get_folder_name(output_directory, k):
     return folder_path
 
 
-def save_plots(folder_path, csv_file_path):
+def save_plots(folder_path: str, csv_file_path: str):
     df = pd.read_csv(os.path.join(folder_path, csv_file_path))
 
     plt.figure(figsize=(10, 6))
@@ -142,3 +141,17 @@ def save_plots(folder_path, csv_file_path):
     plt.grid(True)
 
     plt.savefig(os.path.join(folder_path, "accuracy_plot.png"))
+
+
+def save_lr(folder_path: str, csv_file_path: str):
+    df = pd.read_csv(os.path.join(folder_path, csv_file_path))
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(df['lr'], label='Learning rate', marker='o')
+    plt.xlabel('Epoch')
+    plt.ylabel('Learning rate')
+    plt.title('Learning rate Over Epochs')
+    plt.legend()
+    plt.grid(True)
+
+    plt.savefig(os.path.join(folder_path, "Learning_rate_plot.png"))
