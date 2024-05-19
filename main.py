@@ -40,7 +40,7 @@ if len(model_continue) > 0:
 
 pcam_model = PCAMResNetModel(dataset=data_pcam, model=model, batch_size=batch_size, output_directory=output_folder,
                              max_lr=max_learning_rate, epochs=epochs, opt=optimizer, loss=loss_fn,
-                             epoch_start=epoch_start, scheduler=scheduler, k='resnet101_aug')
+                             epoch_start=epoch_start, scheduler=scheduler, k='resnet101_unfreeze')
 
 # print(pcam_model.model)
 
