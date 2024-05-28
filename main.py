@@ -16,7 +16,7 @@ epochs = 50
 
 data_pcam = Dataset(root=dataset_folder, batch_size=batch_size)
 
-model = torch.hub.load('pytorch/vision:v0.10.0', 'resnet101', weights='IMAGENET1K_V2')
+model = torch.hub.load('pytorch/vision:v0.10.0', 'resnet50', weights='IMAGENET1K_V2')
 
 # for param in model.parameters():
 #     param.requires_grad = False
@@ -30,7 +30,7 @@ epoch_start = 0
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 scheduler = lr_scheduler.OneCycleLR(optimizer, max_lr=max_learning_rate, total_steps=len(data_pcam.train_dataloader)*epochs)
 
-model_continue = ''
+model_continue = '/home/piti/python_projects/magisterka/DetectCMtoLN/outputs/2024-05-21_16-10-20-model-resnet101_unfreeze/last_model.pth'
 if len(model_continue) > 0:
     load_model = torch.load(model_continue)
     model.load_state_dict(load_model['model_state_dict'])
@@ -48,8 +48,8 @@ pcam_model = PCAMResNetModel(dataset=data_pcam, model=model, batch_size=batch_si
 trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
 print("Trainable parameters:", trainable_params)
 
-print('\nTraining: ')
-pcam_model.train()
+# print('\nTraining: ')
+# pcam_model.train()
 
 print("\nTesting: ")
 pcam_model.test()
