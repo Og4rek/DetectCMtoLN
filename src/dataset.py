@@ -1,8 +1,10 @@
 from torch.utils import data
 from torchvision import datasets
 from torchvision.transforms import v2
+
 import torchvision.transforms.functional as F
 import random
+import torch
 
 
 class RandomZoom(object):
@@ -30,12 +32,14 @@ class RandomAffineWithWrap(object):
 
 
 class Dataset:
-    def __init__(self, root, batch_size):
+    def __init__(self, root, batch_size, num_workers):
         self.root = root
         self.batch_size = batch_size
+        self.num_workers = num_workers
 
         self.transform = v2.Compose([
-            v2.ToTensor(),
+            v2.ToImage(),
+            v2.ToDtype(torch.float32, scale=True),
             v2.RandomHorizontalFlip(p=0.5),  # Horizontal flip with probability 1.0 (always)
             v2.RandomVerticalFlip(p=0.5),  # Vertical flip with probability 1.0 (always)
             v2.RandomRotation(degrees=90),  # Rotation range of 90 degrees
@@ -46,7 +50,8 @@ class Dataset:
         ])
 
         self.transform_valid = v2.Compose([
-            v2.ToTensor(),
+            v2.ToImage(),
+            v2.ToDtype(torch.float32, scale=True),
             v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         ])
 
@@ -67,6 +72,9 @@ class Dataset:
         self.test_data = datasets.PCAM(self.root, split='test', transform=self.transform_valid)
 
     def create_dataloaders(self):
-        self.train_dataloader = data.DataLoader(self.training_data, batch_size=self.batch_size, pin_memory=True, num_workers=12)
-        self.valid_dataloader = data.DataLoader(self.valid_data, batch_size=self.batch_size, pin_memory=True, num_workers=12)
-        self.test_dataloader = data.DataLoader(self.test_data, batch_size=self.batch_size, pin_memory=True, num_workers=12)
+        self.train_dataloader = data.DataLoader(self.training_data, batch_size=self.batch_size, pin_memory=True,
+                                                num_workers=self.num_workers)
+        self.valid_dataloader = data.DataLoader(self.valid_data, batch_size=self.batch_size, pin_memory=True,
+                                                num_workers=self.num_workers)
+        self.test_dataloader = data.DataLoader(self.test_data, batch_size=self.batch_size, pin_memory=True,
+                                               num_workers=self.num_workers)
