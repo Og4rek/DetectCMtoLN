@@ -1,11 +1,9 @@
 # DetectCMtoLN
 
----
 DetectCMtoLN (Detect Cancer Metastasis to Lymph Nodes) is a project focused on evaluating the use of neural networks to detect cancer metastasis to lymph nodes from histopathological images, based on the PatchCamelyon (PCam) dataset. This repository contains the source code for the project, including model training, testing, and evaluation scripts.
 
 ## Project Structure
 
----
 ```bash
 DetectCMtoLN/
 ├── att_gconvs
@@ -35,7 +33,6 @@ DetectCMtoLN/
 
 ## Setup and Installation
 
----
 ### Clone the Repository
 
 ```bash
@@ -89,7 +86,6 @@ python main.py --model resnet50 --epoch 10 --dataset_path dataset/pcam --output_
 
 ## Models
 
----
 The project supports several models described in articles[1][2][3], including:
 
     ResNet variants: resnet18, resnet34, resnet50, resnet101, resnet152
@@ -97,7 +93,6 @@ The project supports several models described in articles[1][2][3], including:
 
 ## Bibliography
 
----
 [1] Veeling, Bastiaan S., et al. "Rotation equivariant CNNs for digital pathology." _Medical Image Computing and Computer Assisted Intervention–MICCAI 2018: 21st International Conference, Granada, Spain, September 16-20, 2018, Proceedings, Part II 11._ Springer International Publishing, 2018.
 
 [2] Romero, David, et al. _"Attentive group equivariant convolutional networks." International Conference on Machine Learning._ PMLR, 2020.
@@ -106,12 +101,10 @@ The project supports several models described in articles[1][2][3], including:
 
 ## License
 
----
 This project is licensed under the MIT License. See the LICENSE file for more details.
 
 ## Acknowledgements
 
----
 I would like to thank the authors of the PCam dataset and the contributors to the att_gconvs repository for their valuable resources.
 
 For any questions or issues, please open an issue on the GitHub repository.
