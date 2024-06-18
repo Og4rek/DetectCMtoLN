@@ -1,4 +1,4 @@
-name: magisterka
+name: detect_cmtoln
 channels:
   - pytorch
   - nvidia
@@ -163,4 +163,3 @@ dependencies:
   - zstd=1.5.5=hc292b87_2
   - pip:
       - opencv-python==4.9.0.80
-prefix: /home/piti/anaconda3/envs/magisterka
