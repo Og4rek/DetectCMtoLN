@@ -11,7 +11,7 @@ def main():
     data_pcam = Dataset(root=dataset_folder, batch_size=batch_size)
 
     best_models_paths = {
-        'ResNet50': '/home/piti/python_projects/magisterka/DetectCMtoLN/outputs/2024-05-22_23-12-32-model-resnet50_unfreeze/last_model.pth',
+        'ResNet101': '/home/piti/python_projects/magisterka/DetectCMtoLN/outputs/2024-06-04_13-40-16-model-resnet101_unfreeze/best_model.pth',
         # 'P4DenseNet': '/home/piti/pythonProjects/Magisterka_pytorch/Wyniki_ostateczne/P4DenseNet/best_model.pth',
         # 'P4MDenseNet': '/home/piti/pythonProjects/Magisterka_pytorch/Wyniki_ostateczne/P4MDenseNet/best_model.pth',
         # 'fA_P4DenseNet': '/home/piti/pythonProjects/Magisterka_pytorch/Wyniki_ostateczne/fA_P4DenseNet/best_model.pth',
@@ -19,7 +19,7 @@ def main():
     }
 
     models = {
-        'ResNet50': torch.hub.load('pytorch/vision:v0.10.0', 'resnet50', weights='IMAGENET1K_V2'),
+        'ResNet101': torch.hub.load('pytorch/vision:v0.10.0', 'resnet101', weights='IMAGENET1K_V2'),
         # 'P4DenseNet': P4DenseNet(n_channels=13),
         # 'P4MDenseNet': P4MDenseNet(n_channels=9),
         # 'fA_P4DenseNet': fA_P4DenseNet(n_channels=13),
@@ -27,7 +27,7 @@ def main():
     }
 
     num_classes = 2
-    models['ResNet50'].fc = nn.Linear(models['ResNet50'].fc.in_features, num_classes)
+    models['ResNet101'].fc = nn.Linear(models['ResNet101'].fc.in_features, num_classes)
     loss_fn = nn.CrossEntropyLoss()
 
     print("\nTesting: ")

@@ -14,8 +14,8 @@ def train_loop(dataloader, model, loss_fn, optimizer, device, scheduler):
     model.train()
     for batch, (X, y) in tqdm(enumerate(dataloader), total=len(dataloader), desc="Training Progress: "):
         counter += 1
-        X = X.to(device)
-        y = y.to(device)
+        X = X.to(device, non_blocking=True)
+        y = y.to(device, non_blocking=True)
         pred = model(X)
         loss = loss_fn(pred, y)
 
@@ -41,8 +41,8 @@ def valid_loop(dataloader, model, loss_fn, epoch, best_valid_acc, folder_path, d
 
     with torch.no_grad():
         for X, y in tqdm(dataloader, total=len(dataloader), desc="Validation Progress: "):
-            X = X.to(device)
-            y = y.to(device)
+            X = X.to(device, non_blocking=True)
+            y = y.to(device, non_blocking=True)
             pred = model(X)
             valid_loss += loss_fn(pred, y).item()
             valid_accuracy += (pred.argmax(1) == y).type(torch.float).sum().item()
@@ -84,8 +84,8 @@ def test_loop(dataloader, model, loss_fn, device):
 
     with torch.no_grad():
         for X, y in tqdm(dataloader, total=len(dataloader), desc="Testing Progress: "):
-            X = X.to(device)
-            y = y.to(device)
+            X = X.to(device, non_blocking=True)
+            y = y.to(device, non_blocking=True)
             pred = model(X)
             test_loss += loss_fn(pred, y).item()
             correct += (pred.argmax(1) == y).type(torch.float).sum().item()
@@ -98,7 +98,7 @@ def test_loop(dataloader, model, loss_fn, device):
     y_scores = np.array(y_scores)
 
     auc = roc_auc_score(y_true, y_scores)
-    print(f"Test done: \n Accuracy: {(100 * correct):>0.2f}%\n Avg loss: {test_loss:>8f}\n AUC: {auc:>0.2f}\n")
+    print(f"Test done: \n Accuracy: {(100 * correct):>0.4f}%\n Avg loss: {test_loss:>8f}\n AUC: {auc:>0.4f}\n")
 
 
 def get_folder_name(output_directory, k):
