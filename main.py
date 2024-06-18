@@ -1,55 +1,26 @@
-from src.pcammodel import PCAMResNetModel
-from src.dataset import Dataset
-from torch.optim import lr_scheduler
-import torch.nn as nn
-import torch
+import argparse
 
-dataset_folder = 'dataset'
-output_folder = 'outputs'
 
-# hyperparameters
-batch_size = 64
-max_learning_rate = 1e-3
-learning_rate = max_learning_rate / 25
-loss_fn = nn.CrossEntropyLoss()
-epochs = 10
+def parse_args():
+    parser = argparse.ArgumentParser(description="Training configuration")
 
-data_pcam = Dataset(root=dataset_folder, batch_size=batch_size)
+    parser.add_argument('--model', type=str, choices=['ResNet18', 'ResNet34', 'ResNet50', 'ResNet101', 'ResNet152', 'DenseNet', 'P4DenseNet', 'P4MDenseNet', 'fA_P4DenseNet', 'fA_P4MDenseNet'], required=True, help='Model type')
+    parser.add_argument('--resnet_freez', action='store_true', help='Freeze ResNet layers during training')
+    parser.add_argument('--aug', action='store_true', help='Use data augmentation')
+    parser.add_argument('--lr', type=str, default=1e-3, help='Learning rate scheduler type')
+    parser.add_argument('--lr_pct_start', type=float, default=0.5, help='Starting percentage of learning rate')
+    parser.add_argument('--batch_size', type=int, default=64, help='Batch size for training')
+    parser.add_argument('--max_lr', type=float, default=1e-3, help='Maximum learning rate')
+    parser.add_argument('--epoch', type=int, required=True, help='Number of epochs for training')
+    parser.add_argument('--num_workers', type=int, default=1, help='Number of workers')
+    parser.add_argument('--continue_train', action='store_true', help='Continue training from the last checkpoint')
+    parser.add_argument('--dataset_path', type=str, default="dataset", help='Path to the dataset')
+    parser.add_argument('--output_folder', type=str, default="output", help='Folder to save the output')
+    parser.add_argument('--log_folder', type=str, default="logs", help='Folder to save the logs')
 
-model = torch.hub.load('pytorch/vision:v0.10.0', 'resnet101', weights='IMAGENET1K_V2')
+    return parser.parse_args()
 
-# for param in model.parameters():
-#     param.requires_grad = False
 
-num_classes = 2
-model.fc = nn.Linear(model.fc.in_features, num_classes)
-
-model.to('cuda')
-
-epoch_start = 0
-optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
-scheduler = lr_scheduler.OneCycleLR(optimizer, max_lr=max_learning_rate, total_steps=len(data_pcam.train_dataloader)*epochs)
-
-model_continue = '/home/piti/python_projects/magisterka/DetectCMtoLN/outputs/2024-06-04_16-16-17-model-resnet101_unfreeze/last_model.pth'
-if len(model_continue) > 0:
-    load_model = torch.load(model_continue)
-    model.load_state_dict(load_model['model_state_dict'])
-    optimizer.load_state_dict(load_model['optimizer_state_dict'])
-    scheduler.load_state_dict(load_model['scheduler_state_dict'])
-    epoch_start = load_model['epoch']
-
-pcam_model = PCAMResNetModel(dataset=data_pcam, model=model, batch_size=batch_size, output_directory=output_folder,
-                             max_lr=max_learning_rate, epochs=epochs, opt=optimizer, loss=loss_fn,
-                             epoch_start=epoch_start, scheduler=scheduler, k='resnet101_unfreeze')
-
-# print(pcam_model.model)
-
-# Calculate trainable parameters
-trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
-print("Trainable parameters:", trainable_params)
-
-print('\nTraining: ')
-pcam_model.train()
-
-print("\nTesting: ")
-pcam_model.test()
+if __name__ == "__main__":
+    args = parse_args()
+    print(args)
