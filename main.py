@@ -45,11 +45,12 @@ def main(args):
             epoch_start = load_model['epoch']
 
         loss_fn = nn.CrossEntropyLoss()
+        model_freeze = 'freeze' if args.resnet_freeze else 'unfreeze'
 
         pcam_model = PCAMResNetModel(dataset=data_pcam, model=model, batch_size=args.batch_size,
                                      output_directory=args.output_folder, max_lr=args.max_lr, epochs=args.epoch,
                                      opt=optimizer, loss=loss_fn, epoch_start=epoch_start,
-                                     scheduler=scheduler, k=f'{args.model}_{args.resnet_freeze}')
+                                     scheduler=scheduler, checkpoint_folder=f'{args.model}_{model_freeze}')
     else:
         pcam_model = load_densenet()
 

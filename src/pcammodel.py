@@ -3,14 +3,15 @@ from src.utils import *
 
 
 class PCAMResNetModel:
-    def __init__(self, dataset, model, batch_size, output_directory, max_lr, epochs, opt, loss, epoch_start, scheduler, k):
+    def __init__(self, dataset, model, batch_size, output_directory, max_lr, epochs, opt, loss, epoch_start, scheduler,
+                 checkpoint_folder):
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
         self.dataset = dataset
         self.model = model.to(self.device)
         self.batch_size = batch_size
         if output_directory is not None:
-            self.output_path = get_folder_name(output_directory, k)
+            self.output_path = get_folder_name(output_directory, checkpoint_folder)
 
         # hyperparameters
         self.max_learning_rate = max_lr
