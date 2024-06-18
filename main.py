@@ -86,7 +86,7 @@ def parse_args():
     parser.add_argument('--dataset_path', type=str, default="dataset", help='Path to the dataset')
     parser.add_argument('--output_folder', type=str, default="output", help='Folder to save the output')
     parser.add_argument('--log_folder', type=str, default="logs", help='Folder to save the logs')
-    parser.add_argument('--test_model', type=str, daction='store_true', help='Only test given model with out training')
+    parser.add_argument('--test_model', type=str, daction='store_true', help='Only test given model without training')
 
     return parser.parse_args()
 
