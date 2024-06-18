@@ -1,9 +1,12 @@
+import torch.nn as nn
+import numpy as np
+from torch.optim import lr_scheduler
 import csv
 from src.utils import *
 
 
-class PCAMResNetModel:
-    def __init__(self, dataset, model, batch_size, output_directory, max_lr, epochs, opt, loss, epoch_start, scheduler,
+class PCAMModel:
+    def __init__(self, dataset, model, batch_size, output_directory, epochs, opt, loss, epoch_start, scheduler,
                  checkpoint_folder):
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -14,18 +17,14 @@ class PCAMResNetModel:
             self.output_path = get_folder_name(output_directory, checkpoint_folder)
 
         # hyperparameters
-        self.max_learning_rate = max_lr
         self.epochs = epochs
         self.epochs_start = epoch_start
         self.loss_fn = loss
         self.optimizer = opt
         self.ln_scheduler = scheduler
-        self.early_stopping = {"monitor": 'val_accuracy', "min_delta": 1e-4, "patience": 20}
 
     def train(self):
         best_valid_acc = 0
-        best_valid_acc_es = None
-        counter = 0
 
         headers = ["epoch", "train_loss", "train_acc", "valid_loss", "valid_acc", "lr"]
         csv_file_path = "history.csv"
@@ -53,21 +52,14 @@ class PCAMResNetModel:
                                                                self.optimizer,
                                                                self.ln_scheduler)
 
+            if isinstance(self.ln_scheduler, ReduceLROnPlateau):
+                self.ln_scheduler.step(valid_loss)
+
             print(f"Train errors: train_loss: {train_loss:>7f}, train_acc: {train_acc:>7f}, "
                   f"valid_loss: {valid_loss:>7f}, valid_acc: {valid_acc:>7f}, lr: {self.optimizer.param_groups[0]['lr']}\n")
             with open(os.path.join(self.output_path, csv_file_path), mode='a', newline='') as file:
                 writer = csv.writer(file)
                 writer.writerow([epoch + 1, train_loss, train_acc, valid_loss, valid_acc, self.optimizer.param_groups[0]['lr']])
-
-            if best_valid_acc_es is None or valid_acc > best_valid_acc_es + self.early_stopping["min_delta"]:
-                best_valid_acc_es = valid_acc
-                counter = 0
-            else:
-                counter += 1
-
-            if counter >= self.early_stopping["patience"]:
-                print("Early stopping due to lack of improvement in validation accuracy")
-                break
 
         print("Training done!")
 

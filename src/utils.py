@@ -3,6 +3,7 @@ import datetime
 import pandas as pd
 import matplotlib.pyplot as plt
 import torch
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 from tqdm import tqdm
 from sklearn.metrics import roc_auc_score
 import numpy as np
@@ -24,7 +25,8 @@ def train_loop(dataloader, model, loss_fn, optimizer, device, scheduler):
 
         loss.backward()
         optimizer.step()
-        scheduler.step()
+        if not isinstance(scheduler, ReduceLROnPlateau):
+            scheduler.step()
         optimizer.zero_grad()
 
     epoch_loss = train_loss / counter
