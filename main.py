@@ -59,12 +59,15 @@ def main(args):
     trainable_params = sum(p.numel() for p in pcam_model.model.parameters() if p.requires_grad)
     print("Trainable parameters:", trainable_params)
 
-    #TODO: dodac czy user chce trenowac czy tylko testowac
-    print('\nTraining: ')
-    pcam_model.train()
+    if args.test_model:
+        print("\nTesting: ")
+        pcam_model.test()
+    else:
+        print('\nTraining: ')
+        pcam_model.train()
 
-    print("\nTesting: ")
-    pcam_model.test()
+        print("\nTesting: ")
+        pcam_model.test()
 
 
 def parse_args():
@@ -79,10 +82,11 @@ def parse_args():
     parser.add_argument('--max_lr', type=float, default=1e-3, help='Maximum learning rate')
     parser.add_argument('--epoch', type=int, required=True, help='Number of epochs for training')
     parser.add_argument('--num_workers', type=int, default=1, help='Number of workers')
-    parser.add_argument('--model_path', default='', help='Continue training from the given checkpoint')
+    parser.add_argument('--model_path', default='', help='Continue training from the given checkpoint or test model')
     parser.add_argument('--dataset_path', type=str, default="dataset", help='Path to the dataset')
     parser.add_argument('--output_folder', type=str, default="output", help='Folder to save the output')
     parser.add_argument('--log_folder', type=str, default="logs", help='Folder to save the logs')
+    parser.add_argument('--test_model', type=str, daction='store_true', help='Only test given model with out training')
 
     return parser.parse_args()
 
