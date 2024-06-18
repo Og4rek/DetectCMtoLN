@@ -32,28 +32,30 @@ class RandomAffineWithWrap(object):
 
 
 class Dataset:
-    def __init__(self, root, batch_size, num_workers):
+    def __init__(self, root, batch_size, num_workers, augumentation):
         self.root = root
         self.batch_size = batch_size
         self.num_workers = num_workers
-
-        self.transform = v2.Compose([
-            v2.ToImage(),
-            v2.ToDtype(torch.float32, scale=True),
-            v2.RandomHorizontalFlip(p=0.5),  # Horizontal flip with probability 1.0 (always)
-            v2.RandomVerticalFlip(p=0.5),  # Vertical flip with probability 1.0 (always)
-            v2.RandomRotation(degrees=90),  # Rotation range of 90 degrees
-            RandomZoom(zoom_range=1.1, p=0.75),
-            RandomAffineWithWrap(max_wrap=0.2, p=0.75),
-            v2.ColorJitter(brightness=0.03, contrast=0.03, saturation=0.03, hue=0.03),
-            v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-        ])
 
         self.transform_valid = v2.Compose([
             v2.ToImage(),
             v2.ToDtype(torch.float32, scale=True),
             v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         ])
+
+        self.transform = self.transform_valid
+        if augumentation:
+            self.transform = v2.Compose([
+                v2.ToImage(),
+                v2.ToDtype(torch.float32, scale=True),
+                v2.RandomHorizontalFlip(p=0.5),  # Horizontal flip with probability 1.0 (always)
+                v2.RandomVerticalFlip(p=0.5),  # Vertical flip with probability 1.0 (always)
+                v2.RandomRotation(degrees=90),  # Rotation range of 90 degrees
+                RandomZoom(zoom_range=1.1, p=0.75),
+                RandomAffineWithWrap(max_wrap=0.2, p=0.75),
+                v2.ColorJitter(brightness=0.03, contrast=0.03, saturation=0.03, hue=0.03),
+                v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+            ])
 
         self.test_data = None
         self.valid_data = None

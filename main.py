@@ -7,7 +7,16 @@ from torch.optim import lr_scheduler
 from src.pcam_model import PCAMModel
 from src.dataset import Dataset
 
-from experiments.pcam.models.densenet import DenseNet, P4DenseNet, P4MDenseNet, fA_P4DenseNet, fA_P4MDenseNet
+import os
+import sys
+
+try:
+    cwd = os.getcwd()
+    sys.path.append(os.getcwd()+'/att_gconvs')
+    from experiments.pcam.models.densenet import DenseNet, P4DenseNet, P4MDenseNet, fA_P4DenseNet, fA_P4MDenseNet
+except ModuleNotFoundError:
+    print(f'Module att_gconvs not found!')
+    sys.exit(1)
 
 
 def load_checkpoint(model_path, model, optimizer, scheduler):
@@ -93,7 +102,8 @@ def load_densenet(args, dataset):
 
 
 def main(args):
-    pcam_dataset = Dataset(root=args.dataset_path, batch_size=args.batch_size, num_workers=args.num_workers)
+    pcam_dataset = Dataset(root=args.dataset_path, batch_size=args.batch_size, num_workers=args.num_workers,
+                           augumentation=args.aug)
 
     if 'resnet' in args.model:
         pcam_model = load_resnet(args, pcam_dataset)
@@ -120,7 +130,9 @@ def main(args):
 def parse_args():
     parser = argparse.ArgumentParser(description="Training configuration")
 
-    parser.add_argument('--model', type=str, choices=['resnet18', 'resnet34', 'resnet50', 'resnet101', 'resnet152', 'DenseNet', 'P4DenseNet','P4MDenseNet','fA_P4DenseNet', 'fA_P4MDenseNet'], required=True, help='Model type')
+    parser.add_argument('--model', type=str,
+                        choices=['resnet18', 'resnet34', 'resnet50', 'resnet101', 'resnet152', 'DenseNet', 'P4DenseNet',
+                                 'P4MDenseNet', 'fA_P4DenseNet', 'fA_P4MDenseNet'], required=True, help='Model type')
     parser.add_argument('--resnet_freeze', action='store_true', help='Freeze ResNet layers during training')
     parser.add_argument('--aug', action='store_true', help='Use data augmentation')
     parser.add_argument('--lr', type=str, default=1e-3, help='Learning rate scheduler type')
